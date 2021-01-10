@@ -57,4 +57,9 @@ docker run \
 2. Import environment from file `src/Todo.ly.postman_environment.json` to Postman
 3. Run collection
 
-# Found bugs
+# Findings
+
+1. Inconsistent format.
+API has posibility to chose request and response format, `xml` or `json`. Unfortunally, one or another doesn't work, so tests are using different formats.
+2. Filters API are not functional. ...
+3.
