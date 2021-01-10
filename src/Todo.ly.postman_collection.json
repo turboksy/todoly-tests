@@ -9,7 +9,7 @@
 			"name": "User API",
 			"item": [
 				{
-					"name": "Sign up successful",
+					"name": "Sign up successfully",
 					"event": [
 						{
 							"listen": "test",
@@ -24,20 +24,14 @@
 									"});",
 									"",
 									"pm.test(\"User data in response\", function () {",
-									"    const responseData = pm.response.text();",
-									"    const xml = cheerio.load(responseData, {",
-									"        ignoreWhitespace: true,",
-									"        xmlMode: true",
-									"    });",
-									"    const responseEmail = xml(\"UserObject Email\").text();",
-									"    const responseFullName = xml(\"UserObject FullName\").text();",
-									"    const responsePassword = xml(\"UserObject Password\");",
-									"    const responseId = xml(\"UserObject Id\").text();",
-									"    pm.expect(responseEmail).to.eql(email);",
-									"    pm.expect(responseFullName).to.eql(fullName);",
-									"    pm.expect(responsePassword.length).to.eql(0);",
-									"    pm.expect(responseId).not.oneOf([null, undefined]);",
-									"    pm.environment.set(\"userId\", responseId);",
+									"    const jsonObject = xml2Json(responseBody);",
+									"    const user = jsonObject.UserObject",
+									"    ",
+									"    pm.expect(user.Email).to.eql(email);",
+									"    pm.expect(user.FullName).to.eql(fullName);",
+									"    pm.expect(user).to.not.have.property(\"Password\");",
+									"    pm.expect(user).to.have.property(\"Id\");",
+									"    pm.environment.set(\"userId\", user.Id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -102,8 +96,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.variables.replaceIn('{{$randomFullName}}');",
-									"pm.variables.replaceIn('{{$randomPassword}}');"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -117,23 +110,13 @@
 							"raw": "<UserObject>\n  <Email>turboksy@gmail.com</Email>\n  <FullName>{{$randomFullName}}</FullName>\n  <Password>{{$randomPassword}}</Password>\n</UserObject>"
 						},
 						"url": {
-							"raw": "{{url}}/api/user.json?fullName={{$randomFullName}}&password={{$randomPassword}}",
+							"raw": "{{url}}/api/user.xml",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
-								"user.json"
-							],
-							"query": [
-								{
-									"key": "fullName",
-									"value": "{{$randomFullName}}"
-								},
-								{
-									"key": "password",
-									"value": "{{$randomPassword}}"
-								}
+								"user.xml"
 							]
 						}
 					},
@@ -165,8 +148,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.variables.replaceIn('{{$randomFullName}}');",
-									"pm.variables.replaceIn('{{$randomPassword}}');"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -180,23 +162,13 @@
 							"raw": "<UserObject>\n  <Email>user123gmail.com</Email>\n  <FullName>{{$randomFullName}}</FullName>\n  <Password>{{$randomPassword}}</Password>\n</UserObject>"
 						},
 						"url": {
-							"raw": "{{url}}/api/user.json?fullName={{$randomFullName}}&password={{$randomPassword}}",
+							"raw": "{{url}}/api/user.xml",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
-								"user.json"
-							],
-							"query": [
-								{
-									"key": "fullName",
-									"value": "{{$randomFullName}}"
-								},
-								{
-									"key": "password",
-									"value": "{{$randomPassword}}"
-								}
+								"user.xml"
 							]
 						}
 					},
@@ -228,8 +200,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.variables.replaceIn('{{$randomEmail}}');",
-									"pm.variables.replaceIn('{{$randomFullName}}');"
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -240,26 +211,16 @@
 						"header": [],
 						"body": {
 							"mode": "raw",
-							"raw": "<UserObject>\n  <Email>{{$randomEmail}}</Email>\n  <FullName>{{$randomFullName}}</FullName>\n  <Password>{{}}</Password>\n</UserObject>"
+							"raw": "<UserObject>\n  <Email>{{$randomEmail}}</Email>\n  <FullName>{{$randomFullName}}</FullName>\n  <Password></Password>\n</UserObject>"
 						},
 						"url": {
-							"raw": "{{url}}/api/user.json?email={{$randomEmail}}&fullName={{$randomFullName}}",
+							"raw": "{{url}}/api/user.xml",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
-								"user.json"
-							],
-							"query": [
-								{
-									"key": "email",
-									"value": "{{$randomEmail}}"
-								},
-								{
-									"key": "fullName",
-									"value": "{{$randomFullName}}"
-								}
+								"user.xml"
 							]
 						}
 					},
@@ -325,6 +286,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"const email = pm.environment.get('email');",
+									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
@@ -333,6 +296,11 @@
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('TokenString');",
 									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
+									"});",
+									"",
+									"pm.test(\"Check user email\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.UserEmail).to.eql(email);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -422,8 +390,21 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"const email = pm.environment.get('email');",
+									"const userId = pm.environment.get('userId');",
+									"",
 									"pm.test(\"Status code is not 200\", function () {",
 									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check user email\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Email).to.eql(email);",
+									"});",
+									"",
+									"pm.test(\"Check user id\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Id).to.eql(parseInt(userId));",
 									"});",
 									""
 								],
@@ -529,39 +510,27 @@
 					"response": []
 				},
 				{
-					"name": "Update user successfuly with post method",
+					"name": "Login with new email",
 					"event": [
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"pm.variables.set(\"newEmail\", pm.variables.replaceIn('{{$randomEmail}}'));",
-									"pm.variables.set(\"newFullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
-									""
-								],
-								"type": "text/javascript"
-							}
-						},
 						{
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const newEmail = pm.variables.get(\"newEmail\");",
-									"const newFullName = pm.variables.get(\"newFullName\");",
+									"const email = pm.environment.get('email');",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test(\"Email is updated\", function () {",
-									"    const jsonObject = xml2Json(responseBody);",
-									"    pm.expect(jsonObject.UserObject.Email).to.eql(newEmail);",
-									"    pm.environment.set(\"email\",newEmail)",
+									"pm.test(\"Check is there token and then save\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('TokenString');",
+									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
 									"});",
-									"pm.test(\"Full name is updated\", function () {",
-									"    const jsonObject = xml2Json(responseBody);",
-									"    pm.expect(jsonObject.UserObject.FullName).to.eql(newFullName);",
-									"    pm.environment.set(\"fullName\",newFullName)",
+									"",
+									"pm.test(\"Check user email\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.UserEmail).to.eql(email);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -569,32 +538,32 @@
 						}
 					],
 					"request": {
-						"method": "POST",
-						"header": [
-							{
-								"key": "Token",
-								"value": "{{accessToken}}",
-								"type": "text"
-							}
-						],
-						"body": {
-							"mode": "raw",
-							"raw": "<UserObject> \n  <Email>{{newEmail}}</Email> \n  <FullName>{{newFullName}}</FullName>\n</UserObject>",
-							"options": {
-								"raw": {
-									"language": "xml"
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{email}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
 								}
-							}
+							]
 						},
+						"method": "GET",
+						"header": [],
 						"url": {
-							"raw": "{{url}}/api/user/0.xml",
+							"raw": "{{url}}/api/authentication/token.json",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
-								"user",
-								"0.xml"
+								"authentication",
+								"token.json"
 							]
 						}
 					},
@@ -610,6 +579,7 @@
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
+									"",
 									""
 								],
 								"type": "text/javascript"
@@ -646,7 +616,9 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test('response code is not ok', function () { pm.response.to.not.be.ok; });"
+									"pm.test('Response code is not ok', function () { ",
+									"    pm.response.to.not.be.ok; ",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -734,6 +706,68 @@
 						}
 					},
 					"response": []
+				},
+				{
+					"name": "Sign up",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const email = pm.variables.get(\"email\");",
+									"const fullName = pm.variables.get(\"fullName\");",
+									"const password = pm.variables.get(\"password\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User data in response\", function () {",
+									"    const jsonObject = xml2Json(responseBody);",
+									"    const user = jsonObject.UserObject",
+									"    ",
+									"    pm.expect(user.Email).to.eql(email);",
+									"    pm.expect(user.FullName).to.eql(fullName);",
+									"    pm.expect(user).to.not.have.property(\"Password\");",
+									"    pm.expect(user).to.have.property(\"Id\");",
+									"    pm.environment.set(\"userId\", user.Id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
+									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
+									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "<UserObject>\n  <Email>{{email}}</Email>\n  <FullName>{{fullName}}</FullName>\n  <Password>{{password}}</Password>\n</UserObject>"
+						},
+						"url": {
+							"raw": "{{url}}/api/user.xml",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"user.xml"
+							]
+						}
+					},
+					"response": []
 				}
 			],
 			"event": [
@@ -758,95 +792,147 @@
 			]
 		},
 		{
-			"name": "Filters",
+			"name": "Projects",
 			"item": [
 				{
-					"name": "Get list of filters",
+					"name": "Sign up",
 					"event": [
 						{
-							"listen": "prerequest",
+							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"filterId\", )"
+									"const email = pm.variables.get(\"email\");",
+									"const fullName = pm.variables.get(\"fullName\");",
+									"const password = pm.variables.get(\"password\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User data in response\", function () {",
+									"    const jsonObject = xml2Json(responseBody);",
+									"",
+									"    pm.expect(jsonObject).to.have.property(\"UserObject\");",
+									"",
+									"    const user = jsonObject.UserObject;",
+									"    ",
+									"    pm.expect(user.Email).to.eql(email);",
+									"    pm.expect(user.FullName).to.eql(fullName);",
+									"    pm.expect(user).to.not.have.property(\"Password\");",
+									"    pm.expect(user).to.have.property(\"Id\");",
+									"    pm.environment.set(\"userId\", user.Id);",
+									"});"
 								],
 								"type": "text/javascript"
 							}
 						},
 						{
-							"listen": "test",
+							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.test(\"Select Today filter\", function () {",
-									"    console.log(pm.response.json());",
-									"    const todayFilter = pm.response.json().find(obj => obj.Content == \"Today\");",
-									"    pm.expect(todayFilter).to.not.be.undefined;",
-									"    pm.environment.set(\"todayFilterId\", todayFilter.Id);",
-									"});"
+									"const cookieJar = pm.cookies.jar();",
+									"cookieJar.clear(pm.variables.get(\"host\"), (err) => {",
+									"    if (err) console.error(err)",
+									"});",
+									"",
+									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
+									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
+									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
+									""
 								],
 								"type": "text/javascript"
 							}
 						}
 					],
 					"request": {
-						"method": "GET",
-						"header": [
-							{
-								"key": "Token",
-								"value": "{{accessToken}}",
-								"type": "text"
-							}
-						],
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "<UserObject>\n  <Email>{{email}}</Email>\n  <FullName>{{fullName}}</FullName>\n  <Password>{{password}}</Password>\n</UserObject>"
+						},
 						"url": {
-							"raw": "{{url}}/api/filters.json",
+							"raw": "{{url}}/api/user.xml",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
-								"filters.json"
+								"user.xml"
 							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Get filter by id",
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const email = pm.variables.get('email');",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check is there token and then save\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('TokenString');",
+									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
+									"});",
+									"",
+									"pm.test(\"Check user email\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.UserEmail).to.eql(email);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{email}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
 						"method": "GET",
 						"header": [],
 						"url": {
-							"raw": ""
+							"raw": "{{url}}/api/authentication/token.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"authentication",
+								"token.json"
+							]
 						}
 					},
 					"response": []
 				},
-				{
-					"name": "Get items of a filter",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": ""
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get done items of the filter",
-					"request": {
-						"method": "GET",
-						"header": [],
-						"url": {
-							"raw": ""
-						}
-					},
-					"response": []
-				}
-			]
-		},
-		{
-			"name": "Projects",
-			"item": [
 				{
 					"name": "Get all projects",
 					"event": [
@@ -854,9 +940,26 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"const predefinedProjectNames = [\"Work\", \"Home\", \"Study\", \"Personal\", \"Shopping List\"];",
+									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Returns only predefined projects\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const projectNames = jsonData.map(project => project.Content);",
+									"    pm.expect(projectNames).to.have.members(predefinedProjectNames);",
 									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -901,10 +1004,23 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"var jsonObject = xml2Json(responseBody);",
+									"const projectName = pm.variables.get(\"projectName\");",
+									"const projectIcon = pm.variables.get(\"projectIcon\");",
 									"",
-									"pm.environment.set(\"projectId\", jsonObject.ProjectObject.Id);",
-									"pm.environment.set(\"projectName\", jsonObject.ProjectObject.Content);"
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check created project\", function () {",
+									"    const jsonObject = xml2Json(responseBody);",
+									"    const project = jsonObject.ProjectObject;",
+									"",
+									"    pm.expect(project.Content).to.eql(projectName);",
+									"    pm.expect(project.Icon).to.eql(projectIcon);",
+									"    pm.expect(project).to.have.property(\"Id\");",
+									"",
+									"    pm.environment.set(\"projectId\", project.Id);",
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -921,7 +1037,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "<ProjectObject>\n  <Content>{{projectName}}</Content>\n  <Icon>{{projectIcon}}</Icon>\n</ProjectObject>",
+							"raw": "<ProjectObject>\n    <Content>{{projectName}}</Content>\n    <Icon>{{projectIcon}}</Icon>\n    <ItemType>2</ItemType>\n</ProjectObject>",
 							"options": {
 								"raw": {
 									"language": "xml"
@@ -957,14 +1073,17 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const projectName = pm.environment.get(\"projectName\");",
+									"const projectName = pm.variables.get(\"projectName\");",
+									"const projectIcon = parseInt(pm.variables.get(\"projectIcon\"));",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
+									"",
 									"pm.test(\"The name of the project is correct\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData.Content).to.eql(projectName);",
+									"    pm.expect(jsonData.Icon).to.eql(projectIcon);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -995,14 +1114,13 @@
 					"response": []
 				},
 				{
-					"name": "Update project by id",
+					"name": "Create new item",
 					"event": [
 						{
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"projectName\", pm.variables.replaceIn('{{$randomDepartment}}'));",
-									"pm.environment.set(\"newProjectIcon\", pm.variables.replaceIn('{{$randomInt}}'));"
+									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
 								],
 								"type": "text/javascript"
 							}
@@ -1011,14 +1129,231 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const projectId = pm.environment.get(\"projectId\");",
-									"const newProjectIcon = pm.environment.get(\"newProjectIcon\");",
+									"const itemName = pm.environment.get(\"itemName\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test(\"The id of the project remail the same\", function () {",
+									"pm.test(\"Content of the item is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Content).to.eql(itemName);",
+									"});",
+									"",
+									"pm.test(\"Check there is an id and save it\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('Id');",
+									"    pm.environment.set(\"itemId\", jsonData.Id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Token",
+								"type": "text",
+								"value": "{{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"Content\": \"{{itemName}}\",\n    \"ProjectId\": \"{{projectId}}\",\n    \"DueDate\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/Items.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get items of a project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemId = pm.environment.get(\"itemId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Item id is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.length(1);",
+									"    const item = jsonData[0];",
+									"    pm.expect(item.Id).to.eql(itemId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/Projects/{{projectId}}/Items.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Projects",
+								"{{projectId}}",
+								"Items.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update item by id as Done",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"Checked\": \"true\"\n}",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/Items/{{itemId}}.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items",
+								"{{itemId}}.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get done items of a project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemId = pm.environment.get(\"itemId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check that only 1 element is returned\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.length(1);",
+									"    const item = jsonData[0];",
+									"    pm.expect(item.Id).to.eql(itemId);",
+									"});",
+									"",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/Projects/{{projectId}}/DoneItems.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Projects",
+								"{{projectId}}",
+								"DoneItems.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update project by id",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"newProjectIcon\", pm.variables.replaceIn('{{$randomInt}}'));",
+									"pm.environment.set(\"newProjectName\", pm.variables.replaceIn('{{$randomDepartment}}'));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const projectId = pm.variables.get(\"projectId\");",
+									"const newProjectName = pm.variables.get(\"newProjectName\");",
+									"const newProjectIcon = pm.variables.get(\"newProjectIcon\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"The id of the project remain the same\", function () {",
 									"    const jsonObject = xml2Json(responseBody);",
 									"    pm.expect(jsonObject.ProjectObject.Id).to.eql(projectId);",
 									"});",
@@ -1026,6 +1361,13 @@
 									"pm.test(\"The icon is updated\", function () {",
 									"    var jsonObject = xml2Json(responseBody);",
 									"    pm.expect(jsonObject.ProjectObject.Icon).to.eql(newProjectIcon);",
+									"    pm.environment.set(\"projectIcon\", newProjectIcon);",
+									"});",
+									"",
+									"pm.test(\"The name is updated\", function () {",
+									"    var jsonObject = xml2Json(responseBody);",
+									"    pm.expect(jsonObject.ProjectObject.Content).to.eql(newProjectName);",
+									"    pm.environment.set(\"projectName\", newProjectName);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1043,7 +1385,7 @@
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "<ProjectObject>  \n  <Icon>{{newProjectIcon}}</Icon>\n</ProjectObject>\n",
+							"raw": "<ProjectObject>\n    <Content>{{newProjectName}}</Content>\n    <Icon>{{newProjectIcon}}</Icon>\n</ProjectObject>",
 							"options": {
 								"raw": {
 									"language": "xml"
@@ -1066,22 +1408,96 @@
 				},
 				{
 					"name": "Delete project by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const projectName = pm.environment.get('projectName');",
+									"const projectId = parseInt(pm.environment.get('projectId'));",
+									"",
+									"pm.test(\"The name of the deleted project is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Content).to.eql(projectName);",
+									"});",
+									"",
+									"pm.test(\"The id of the deleted project is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Id).to.eql(projectId);",
+									"});",
+									"",
+									"pm.test(\"The project is marked as deleted\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Deleted).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
-						"method": "GET",
-						"header": [],
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
 						"url": {
-							"raw": ""
+							"raw": "{{url}}/api/Projects/{{projectId}}.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Projects",
+								"{{projectId}}.json"
+							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Get items of a project",
+					"name": "Get items of a deleted project",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"There is no items\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.empty;",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Token",
+								"type": "text",
+								"value": "{{accessToken}}"
+							}
+						],
 						"url": {
-							"raw": ""
+							"raw": "{{url}}/api/Projects/{{projectId}}/Items.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Projects",
+								"{{projectId}}",
+								"Items.json"
+							]
 						}
 					},
 					"response": []
@@ -1092,7 +1508,218 @@
 			"name": "Items",
 			"item": [
 				{
+					"name": "Sign up",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const email = pm.variables.get(\"email\");",
+									"const fullName = pm.variables.get(\"fullName\");",
+									"const password = pm.variables.get(\"password\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User data in response\", function () {",
+									"    const jsonObject = xml2Json(responseBody);",
+									"    const user = jsonObject.UserObject",
+									"    ",
+									"    pm.expect(user.Email).to.eql(email);",
+									"    pm.expect(user.FullName).to.eql(fullName);",
+									"    pm.expect(user).to.not.have.property(\"Password\");",
+									"    pm.expect(user).to.have.property(\"Id\");",
+									"    pm.environment.set(\"userId\", user.Id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const cookieJar = pm.cookies.jar();",
+									"cookieJar.clear(pm.variables.get(\"host\"), (err) => {",
+									"    if (err) console.error(err)",
+									"});",
+									"",
+									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
+									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
+									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "<UserObject>\n  <Email>{{email}}</Email>\n  <FullName>{{fullName}}</FullName>\n  <Password>{{password}}</Password>\n</UserObject>"
+						},
+						"url": {
+							"raw": "{{url}}/api/user.xml",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"user.xml"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const email = pm.variables.get('email');",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check is there token and then save\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('TokenString');",
+									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
+									"});",
+									"",
+									"pm.test(\"Check user email\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.UserEmail).to.eql(email);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{email}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/authentication/token.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"authentication",
+								"token.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create new project",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"projectName\", pm.variables.replaceIn('{{$randomDepartment}}'));",
+									"pm.environment.set(\"projectIcon\", pm.variables.replaceIn('{{$randomInt}}'));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"var jsonObject = xml2Json(responseBody);",
+									"",
+									"pm.environment.set(\"projectId\", jsonObject.ProjectObject.Id);",
+									"pm.environment.set(\"projectName\", jsonObject.ProjectObject.Content);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "<ProjectObject>\n    <Content>{{projectName}}</Content>\n    <Icon>{{projectIcon}}</Icon>\n    <ItemType>2</ItemType>\n</ProjectObject>",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/projects.xml",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"projects.xml"
+							]
+						}
+					},
+					"response": []
+				},
+				{
 					"name": "Get all items",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"There are no items in new project\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.be.empty;",
+									"})"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -1146,6 +1773,7 @@
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('Id');",
 									"    pm.environment.set(\"itemId\", jsonData.Id);",
+									"    pm.environment.set(\"projectId\", jsonData.ProjectId)",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1185,6 +1813,33 @@
 				},
 				{
 					"name": "Get item by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemName = pm.environment.get(\"itemName\");",
+									"const projectId = pm.environment.get(\"projectId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content of the item is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Content).to.eql(itemName);",
+									"});",
+									"",
+									"pm.test(\"Item is in correct project\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.ProjectId).to.eql(projectId);",
+									"});",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
@@ -1203,6 +1858,697 @@
 								"api",
 								"Items",
 								"{{itemId}}.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update item by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemName = pm.environment.get(\"itemName\");",
+									"const projectId = pm.environment.get(\"projectId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content of the item is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Content).to.eql(itemName);",
+									"});",
+									"",
+									"pm.test(\"Item is in correct project\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.ProjectId).to.eql(projectId);",
+									"});",
+									"",
+									"pm.test(\"Item checked is true\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Checked).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"Checked\": \"true\"\n}",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/Items/{{itemId}}.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items",
+								"{{itemId}}.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete item by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check that deleted is true\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Deleted).to.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/Items/{{itemId}}.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items",
+								"{{itemId}}.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create parent item ",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemName = pm.environment.get(\"itemName\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content of the item is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Content).to.eql(itemName);",
+									"});",
+									"",
+									"pm.test(\"Check there is an id and save it\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('Id');",
+									"    pm.environment.set(\"parentItemId\", jsonData.Id);",
+									"    pm.environment.set(\"projectId\", jsonData.ProjectId)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"Content\": \"{{itemName}}\",\n    \"ProjectId\": \"{{projectId}}\",\n    \"DueDate\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/Items.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create child item",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemName = pm.environment.get(\"itemName\");",
+									"const parentId = pm.environment.get(\"parentItemId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content of the item is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Content).to.eql(itemName);",
+									"});",
+									"",
+									"pm.test(\"Check there is an id and save it\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('Id');",
+									"    pm.environment.set(\"childItemId\", jsonData.Id);",
+									"    pm.environment.set(\"projectId\", jsonData.ProjectId)",
+									"});",
+									"",
+									"pm.test(\"Check that parent id is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('ParentId');",
+									"    pm.expect(jsonData.ParentId).to.eql(parentId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"Content\": \"{{itemName}}\",\n    \"ProjectId\": \"{{projectId}}\",\n    \"ParentId\": \"{{parentItemId}}\",\n    \"DueDate\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/Items.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get root item by child id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const parentId = pm.variables.get(\"parentItemId\");",
+									"const childId = pm.variables.get(\"childItemId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Root is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Id).to.eql(parentId);",
+									"    pm.expect(jsonData.Children[0].Id).to.eql(childId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api//Items/{{childItemId}}/RootItem.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"",
+								"Items",
+								"{{childItemId}}",
+								"RootItem.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update item parent item as Done",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Token",
+								"type": "text",
+								"value": "{{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n   \"Checked\": \"true\"\n}",
+							"options": {
+								"raw": {
+									"language": "xml"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/Items/{{parentItemId}}.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items",
+								"{{parentItemId}}.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get done root item by child id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const parentId = pm.variables.get(\"parentItemId\");",
+									"const childId = pm.variables.get(\"childItemId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Root for parent Done item is correct\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Id).to.eql(parentId);",
+									"    pm.expect(jsonData.Children[0].Id).to.eql(childId);",
+									"    pm.expect(jsonData.Checked).to.be.eql(true);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/Items/{{childItemId}}/DoneRootItem.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items",
+								"{{childItemId}}",
+								"DoneRootItem.json"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Filters",
+			"item": [
+				{
+					"name": "Sign up",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const email = pm.variables.get(\"email\");",
+									"const fullName = pm.variables.get(\"fullName\");",
+									"const password = pm.variables.get(\"password\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"User data in response\", function () {",
+									"    const responseData = pm.response.text();",
+									"    const xml = cheerio.load(responseData, {",
+									"        ignoreWhitespace: true,",
+									"        xmlMode: true",
+									"    });",
+									"    const responseEmail = xml(\"UserObject Email\").text();",
+									"    const responseFullName = xml(\"UserObject FullName\").text();",
+									"    const responsePassword = xml(\"UserObject Password\");",
+									"    const responseId = xml(\"UserObject Id\").text();",
+									"    pm.expect(responseEmail).to.eql(email);",
+									"    pm.expect(responseFullName).to.eql(fullName);",
+									"    pm.expect(responsePassword.length).to.eql(0);",
+									"    pm.expect(responseId).not.oneOf([null, undefined]);",
+									"    pm.environment.set(\"userId\", responseId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
+									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
+									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
+									""
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "<UserObject>\n  <Email>{{email}}</Email>\n  <FullName>{{fullName}}</FullName>\n  <Password>{{password}}</Password>\n</UserObject>"
+						},
+						"url": {
+							"raw": "{{url}}/api/user.xml",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"user.xml"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Login",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const email = pm.environment.get('email');",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Check is there token and then save\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('TokenString');",
+									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
+									"});",
+									"",
+									"pm.test(\"Check user email\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.UserEmail).to.eql(email);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{email}}",
+									"type": "string"
+								},
+								{
+									"key": "password",
+									"value": "{{password}}",
+									"type": "string"
+								}
+							]
+						},
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/api/authentication/token.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"authentication",
+								"token.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get list of filters",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									""
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Select Today filter\", function () {",
+									"    const todayFilter = pm.response.json().find(obj => obj.Content == \"Today\");",
+									"    pm.expect(todayFilter).to.not.be.undefined;",
+									"    pm.environment.set(\"todayFilterId\", todayFilter.Id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/filters.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"filters.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get filter by id",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": ""
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create new item",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const moment = require('moment');",
+									"const date = moment().add(2, 'minutes').format(\"MM/DD/YYYY HH:mm\");",
+									"",
+									"console.log(date);",
+									"",
+									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));",
+									"pm.environment.set(\"dueDate\", date);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemName = pm.environment.get(\"itemName\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content of the item is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Content).to.eql(itemName);",
+									"});",
+									"",
+									"pm.test(\"Check there is an id and save it\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('Id');",
+									"    pm.environment.set(\"itemId\", jsonData.Id);",
+									"    pm.environment.set(\"projectId\", jsonData.ProjectId)",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"Content\": \"{{itemName}}\",\n    \"ProjectId\": 0,\n    \"DueDate\": \"\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/Items.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get items of a filter",
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/Filters/{{todayFilterId}}/Items.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Filters",
+								"{{todayFilterId}}",
+								"Items.json"
 							]
 						}
 					},
@@ -1243,32 +2589,7 @@
 					"response": []
 				},
 				{
-					"name": "Delete item by id",
-					"request": {
-						"method": "DELETE",
-						"header": [
-							{
-								"key": "Token",
-								"value": "{{accessToken}}",
-								"type": "text"
-							}
-						],
-						"url": {
-							"raw": "{{url}}/api/Items/{{itemId}}.json",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"api",
-								"Items",
-								"{{itemId}}.json"
-							]
-						}
-					},
-					"response": []
-				},
-				{
-					"name": "Get root item by child id",
+					"name": "Get done items of the filter",
 					"request": {
 						"method": "GET",
 						"header": [],
@@ -1279,10 +2600,6 @@
 					"response": []
 				}
 			]
-		},
-		{
-			"name": "Recycle Bin",
-			"item": []
 		}
 	]
 }
