@@ -12,7 +12,7 @@ Projects, Items, and Filters folders start with sing up and login as newly gener
 
 ### [Demo video](https://youtu.be/2JKebADyFvU)
 
-### Requirments
+### Requirements
 1. Docker
 2. Git
 
@@ -53,7 +53,7 @@ docker run \
 
 ### [Demo video](https://youtu.be/lEksiPOFZkc)
 
-### Requirments:
+### Requirements:
 1. Postman
 
 ### Steps:
