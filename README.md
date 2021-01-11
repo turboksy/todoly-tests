@@ -10,6 +10,8 @@ Projects, Items, and Filters folders start with sing up and login as newly gener
 
 ## From Docker CLI
 
+### [Demo video](https://youtu.be/2JKebADyFvU)
+
 ### Requirments
 1. Docker
 2. Git
@@ -49,6 +51,8 @@ docker run \
 
 ## From Postman
 
+### [Demo video](https://youtu.be/lEksiPOFZkc)
+
 ### Requirments:
 1. Postman
 
@@ -57,7 +61,6 @@ docker run \
 2. Import environment from file `src/Todo.ly.postman_environment.json` to Postman
 3. Run collection
 
-### [Demo video](https://youtu.be/lEksiPOFZkc)
 
 # Findings
 
