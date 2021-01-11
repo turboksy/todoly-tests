@@ -57,6 +57,8 @@ docker run \
 2. Import environment from file `src/Todo.ly.postman_environment.json` to Postman
 3. Run collection
 
+### [Demo video](https://youtu.be/lEksiPOFZkc)
+
 # Findings
 
 1. Inconsistent format.
