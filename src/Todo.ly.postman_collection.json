@@ -237,11 +237,15 @@
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test(\"Check is there token and then save\", function () {",
+									"pm.test(\"Error message correct\", function () {",
 									"    var jsonData = pm.response.json();",
-									"    pm.expect(jsonData).to.have.property('TokenString');",
-									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
-									"});"
+									"    pm.expect(jsonData.ErrorMessage).to.eql(\"Not Authenticated\");",
+									"});",
+									"pm.test(\"Error code is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.ErrorCode).to.eql(102);",
+									"});",
+									""
 								],
 								"type": "text/javascript"
 							}
@@ -252,13 +256,13 @@
 							"type": "basic",
 							"basic": [
 								{
-									"key": "username",
-									"value": "{{email}}",
+									"key": "password",
+									"value": "anything",
 									"type": "string"
 								},
 								{
-									"key": "password",
-									"value": "{{password}}",
+									"key": "username",
+									"value": "{{email}}",
 									"type": "string"
 								}
 							]
@@ -1819,7 +1823,7 @@
 							"script": {
 								"exec": [
 									"const itemName = pm.environment.get(\"itemName\");",
-									"const projectId = pm.environment.get(\"projectId\");",
+									"const projectId = parseInt(pm.environment.get(\"projectId\"));",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -2305,6 +2309,11 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
+									"const cookieJar = pm.cookies.jar();",
+									"cookieJar.clear(pm.variables.get(\"host\"), (err) => {",
+									"    if (err) console.error(err)",
+									"});",
+									"",
 									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
 									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
 									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
@@ -2410,6 +2419,18 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"const predefinedFilterNames = [\"Inbox\", \"Today\", \"Next\", \"Recycle Bin\"];",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Contains only predefined filters\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    const filterNames = jsonData.map(filter => filter.Content);",
+									"    pm.expect(filterNames).to.have.members(predefinedFilterNames);",
+									"});",
+									"",
 									"pm.test(\"Select Today filter\", function () {",
 									"    const todayFilter = pm.response.json().find(obj => obj.Content == \"Today\");",
 									"    pm.expect(todayFilter).to.not.be.undefined;",
@@ -2444,29 +2465,61 @@
 				},
 				{
 					"name": "Get filter by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const todayFilterId = pm.variables.get(\"todayFilterId\");",
+									"",
+									"pm.test(\"The name of the filter is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Content).to.eql(\"Today\");",
+									"    pm.expect(jsonData.Id).to.eql(todayFilterId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
 						"url": {
-							"raw": ""
+							"raw": "{{url}}/api/Filters/{{todayFilterId}}.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Filters",
+								"{{todayFilterId}}.json"
+							]
 						}
 					},
 					"response": []
 				},
 				{
-					"name": "Create new item",
+					"name": "Create new item for Today",
 					"event": [
 						{
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"const moment = require('moment');",
-									"const date = moment().add(2, 'minutes').format(\"MM/DD/YYYY HH:mm\");",
-									"",
-									"console.log(date);",
+									"const moment = require(\"moment\");",
+									"const dueDate = moment().subtract(2, \"hours\").add(1, \"minutes\");",
+									"const dueDateRequestFormat = dueDate.format(\"MM/DD/YYYY HH:mm\"); // e.g. 01/11/2021 13:02",
+									"const dueDateResponseFormat = dueDate.format(\"DD MMM h:mm A\"); // e.g. 11 Jan 1:02 PM",
 									"",
 									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));",
-									"pm.environment.set(\"dueDate\", date);"
+									"pm.environment.set(\"dueDateRequestFormat\", dueDateRequestFormat);",
+									"pm.environment.set(\"dueDateResponseFormat\", dueDateResponseFormat);"
 								],
 								"type": "text/javascript"
 							}
@@ -2476,21 +2529,26 @@
 							"script": {
 								"exec": [
 									"const itemName = pm.environment.get(\"itemName\");",
+									"const dueDate = pm.variables.get(\"dueDateResponseFormat\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
 									"});",
 									"",
-									"pm.test(\"Content of the item is correct\", function () {",
+									"pm.test(\"Item name is correct\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData.Content).to.eql(itemName);",
+									"});",
+									"",
+									"pm.test(\"Item dueDate is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.DueDate).to.eql(dueDate);",
 									"});",
 									"",
 									"pm.test(\"Check there is an id and save it\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('Id');",
 									"    pm.environment.set(\"itemId\", jsonData.Id);",
-									"    pm.environment.set(\"projectId\", jsonData.ProjectId)",
 									"});"
 								],
 								"type": "text/javascript"
@@ -2502,13 +2560,13 @@
 						"header": [
 							{
 								"key": "Token",
-								"value": "{{accessToken}}",
-								"type": "text"
+								"type": "text",
+								"value": "{{accessToken}}"
 							}
 						],
 						"body": {
 							"mode": "raw",
-							"raw": "{\n    \"Content\": \"{{itemName}}\",\n    \"ProjectId\": 0,\n    \"DueDate\": \"\"\n}",
+							"raw": "{\n    \"Content\": \"{{itemName}}\",\n    \"DueDate\": \"{{dueDateRequestFormat}}\",\n    \"DueTimeSpecified\": true\n}",
 							"options": {
 								"raw": {
 									"language": "json"
@@ -2529,25 +2587,176 @@
 					"response": []
 				},
 				{
-					"name": "Get items of a filter",
+					"name": "Get items from Today filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemId = pm.variables.get(\"itemId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Return todays item\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.length(1);",
+									"    const item = jsonData[0];",
+									"    pm.expect(item.Id).to.eql(itemId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
 						"header": [
 							{
 								"key": "Token",
-								"value": "{{accessToken}}",
-								"type": "text"
+								"type": "text",
+								"value": "{{accessToken}}"
 							}
 						],
 						"url": {
-							"raw": "{{url}}/api/Filters/{{todayFilterId}}/Items.json",
+							"raw": "{{url}}/api/Filters/-1/Items.json",
 							"host": [
 								"{{url}}"
 							],
 							"path": [
 								"api",
 								"Filters",
-								"{{todayFilterId}}",
+								"-1",
+								"Items.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Create new item for future",
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"const moment = require(\"moment\");",
+									"const dueDate = moment().add(2, \"days\");",
+									"const dueDateRequestFormat = dueDate.format(\"MM/DD/YYYY HH:mm\"); // e.g. 01/11/2021 13:02",
+									"const dueDateResponseFormat = dueDate.format(\"DD MMM h:mm A\"); // e.g. 11 Jan 1:02 PM",
+									"",
+									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));",
+									"pm.environment.set(\"dueDateRequestFormat\", dueDateRequestFormat);",
+									"pm.environment.set(\"dueDateResponseFormat\", dueDateResponseFormat);"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemName = pm.environment.get(\"itemName\");",
+									"const dueDate = pm.variables.get(\"dueDateResponseFormat\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Item name is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Content).to.eql(itemName);",
+									"});",
+									"",
+									"pm.test(\"Item dueDate is correct\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData.DueDate).to.eql(dueDate);",
+									"});",
+									"",
+									"pm.test(\"Check there is an id and save it\", function () {",
+									"    var jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.property('Id');",
+									"    pm.environment.set(\"itemId\", jsonData.Id);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Token",
+								"type": "text",
+								"value": "{{accessToken}}"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"Content\": \"{{itemName}}\",\n    \"DueDate\": \"{{dueDateRequestFormat}}\",\n    \"DueTimeSpecified\": true\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/api/Items.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Items.json"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Get items from Next filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemId = pm.variables.get(\"itemId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Return future item\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.length(1);",
+									"    const item = jsonData[0];",
+									"    pm.expect(item.Id).to.eql(itemId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Token",
+								"type": "text",
+								"value": "{{accessToken}}"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/api/Filters/-5/Items.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Filters",
+								"-5",
 								"Items.json"
 							]
 						}
@@ -2556,6 +2765,24 @@
 				},
 				{
 					"name": "Update item by id",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Item is marked as checked\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData.Checked).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "PUT",
 						"header": [
@@ -2590,11 +2817,49 @@
 				},
 				{
 					"name": "Get done items of the filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const itemId = pm.variables.get(\"itemId\");",
+									"",
+									"pm.test(\"Status code is 200\", function () {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Return done item\", function () {",
+									"    const jsonData = pm.response.json();",
+									"    pm.expect(jsonData).to.have.length(1);",
+									"    const item = jsonData[0];",
+									"    pm.expect(item.Id).to.eql(itemId);",
+									"    pm.expect(item.Checked).to.be.true;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
 					"request": {
 						"method": "GET",
-						"header": [],
+						"header": [
+							{
+								"key": "Token",
+								"value": "{{accessToken}}",
+								"type": "text"
+							}
+						],
 						"url": {
-							"raw": ""
+							"raw": "{{url}}/api/Filters/-5/DoneItems.json",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"api",
+								"Filters",
+								"-5",
+								"DoneItems.json"
+							]
 						}
 					},
 					"response": []
