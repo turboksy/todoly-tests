@@ -1,6 +1,6 @@
 {
 	"info": {
-		"_postman_id": "d9e974fa-be0f-4e74-84f6-2a5ea6567e9b",
+		"_postman_id": "66a4e236-b283-4f96-969f-b662e4b6377a",
 		"name": "Todo.ly",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
@@ -31,7 +31,7 @@
 									"    pm.expect(user.FullName).to.eql(fullName);",
 									"    pm.expect(user).to.not.have.property(\"Password\");",
 									"    pm.expect(user).to.have.property(\"Id\");",
-									"    pm.environment.set(\"userId\", user.Id);",
+									"    pm.collectionVariables.set(\"userId\", user.Id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -41,9 +41,9 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
-									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
-									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
+									"pm.collectionVariables.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
+									"pm.collectionVariables.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
+									"pm.collectionVariables.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
 									""
 								],
 								"type": "text/javascript"
@@ -290,7 +290,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const email = pm.environment.get('email');",
+									"const email = pm.variables.get('email');",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -299,7 +299,7 @@
 									"pm.test(\"Check is there token and then save\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('TokenString');",
-									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.TokenString);",
 									"});",
 									"",
 									"pm.test(\"Check user email\", function () {",
@@ -394,8 +394,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const email = pm.environment.get('email');",
-									"const userId = pm.environment.get('userId');",
+									"const email = pm.variables.get('email');",
+									"const userId = pm.variables.get('userId');",
 									"",
 									"pm.test(\"Status code is not 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -469,12 +469,12 @@
 									"pm.test(\"Email is updated\", function () {",
 									"    const jsonObject = xml2Json(responseBody);",
 									"    pm.expect(jsonObject.UserObject.Email).to.eql(newEmail);",
-									"    pm.environment.set(\"email\",newEmail)",
+									"    pm.collectionVariables.set(\"email\",newEmail)",
 									"});",
 									"pm.test(\"Full name is updated\", function () {",
 									"    const jsonObject = xml2Json(responseBody);",
 									"    pm.expect(jsonObject.UserObject.FullName).to.eql(newFullName);",
-									"    pm.environment.set(\"fullName\",newFullName)",
+									"    pm.collectionVariables.set(\"fullName\",newFullName)",
 									"});"
 								],
 								"type": "text/javascript"
@@ -520,7 +520,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const email = pm.environment.get('email');",
+									"const email = pm.variables.get('email');",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -529,7 +529,7 @@
 									"pm.test(\"Check is there token and then save\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('TokenString');",
-									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.TokenString);",
 									"});",
 									"",
 									"pm.test(\"Check user email\", function () {",
@@ -710,68 +710,6 @@
 						}
 					},
 					"response": []
-				},
-				{
-					"name": "Sign up",
-					"event": [
-						{
-							"listen": "test",
-							"script": {
-								"exec": [
-									"const email = pm.variables.get(\"email\");",
-									"const fullName = pm.variables.get(\"fullName\");",
-									"const password = pm.variables.get(\"password\");",
-									"",
-									"pm.test(\"Status code is 200\", function () {",
-									"    pm.response.to.have.status(200);",
-									"});",
-									"",
-									"pm.test(\"User data in response\", function () {",
-									"    const jsonObject = xml2Json(responseBody);",
-									"    const user = jsonObject.UserObject",
-									"    ",
-									"    pm.expect(user.Email).to.eql(email);",
-									"    pm.expect(user.FullName).to.eql(fullName);",
-									"    pm.expect(user).to.not.have.property(\"Password\");",
-									"    pm.expect(user).to.have.property(\"Id\");",
-									"    pm.environment.set(\"userId\", user.Id);",
-									"});"
-								],
-								"type": "text/javascript"
-							}
-						},
-						{
-							"listen": "prerequest",
-							"script": {
-								"exec": [
-									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
-									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
-									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
-									""
-								],
-								"type": "text/javascript"
-							}
-						}
-					],
-					"request": {
-						"method": "POST",
-						"header": [],
-						"body": {
-							"mode": "raw",
-							"raw": "<UserObject>\n  <Email>{{email}}</Email>\n  <FullName>{{fullName}}</FullName>\n  <Password>{{password}}</Password>\n</UserObject>"
-						},
-						"url": {
-							"raw": "{{url}}/api/user.xml",
-							"host": [
-								"{{url}}"
-							],
-							"path": [
-								"api",
-								"user.xml"
-							]
-						}
-					},
-					"response": []
 				}
 			],
 			"event": [
@@ -824,7 +762,7 @@
 									"    pm.expect(user.FullName).to.eql(fullName);",
 									"    pm.expect(user).to.not.have.property(\"Password\");",
 									"    pm.expect(user).to.have.property(\"Id\");",
-									"    pm.environment.set(\"userId\", user.Id);",
+									"    pm.collectionVariables.set(\"userId\", user.Id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -834,14 +772,16 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
+									"pm.collectionVariables.clear();",
+									"",
+									"pm.collectionVariables.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
+									"pm.collectionVariables.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
+									"pm.collectionVariables.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
+									"",
 									"const cookieJar = pm.cookies.jar();",
 									"cookieJar.clear(pm.variables.get(\"host\"), (err) => {",
 									"    if (err) console.error(err)",
 									"});",
-									"",
-									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
-									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
-									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
 									""
 								],
 								"type": "text/javascript"
@@ -884,7 +824,7 @@
 									"pm.test(\"Check is there token and then save\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('TokenString');",
-									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.TokenString);",
 									"});",
 									"",
 									"pm.test(\"Check user email\", function () {",
@@ -998,8 +938,8 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"projectName\", pm.variables.replaceIn('{{$randomDepartment}}'));",
-									"pm.environment.set(\"projectIcon\", pm.variables.replaceIn('{{$randomInt}}'));"
+									"pm.collectionVariables.set(\"projectName\", pm.variables.replaceIn('{{$randomDepartment}}'));",
+									"pm.collectionVariables.set(\"projectIcon\", pm.variables.replaceIn('{{$randomInt}}'));"
 								],
 								"type": "text/javascript"
 							}
@@ -1023,7 +963,7 @@
 									"    pm.expect(project.Icon).to.eql(projectIcon);",
 									"    pm.expect(project).to.have.property(\"Id\");",
 									"",
-									"    pm.environment.set(\"projectId\", project.Id);",
+									"    pm.collectionVariables.set(\"projectId\", project.Id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1124,7 +1064,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
+									"pm.collectionVariables.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
 								],
 								"type": "text/javascript"
 							}
@@ -1133,7 +1073,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemName = pm.environment.get(\"itemName\");",
+									"const itemName = pm.variables.get(\"itemName\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -1147,7 +1087,7 @@
 									"pm.test(\"Check there is an id and save it\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('Id');",
-									"    pm.environment.set(\"itemId\", jsonData.Id);",
+									"    pm.collectionVariables.set(\"itemId\", jsonData.Id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1192,7 +1132,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemId = pm.environment.get(\"itemId\");",
+									"const itemId = pm.variables.get(\"itemId\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -1289,7 +1229,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemId = pm.environment.get(\"itemId\");",
+									"const itemId = pm.variables.get(\"itemId\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -1339,8 +1279,8 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"newProjectIcon\", pm.variables.replaceIn('{{$randomInt}}'));",
-									"pm.environment.set(\"newProjectName\", pm.variables.replaceIn('{{$randomDepartment}}'));"
+									"pm.collectionVariables.set(\"newProjectIcon\", pm.variables.replaceIn('{{$randomInt}}'));",
+									"pm.collectionVariables.set(\"newProjectName\", pm.variables.replaceIn('{{$randomDepartment}}'));"
 								],
 								"type": "text/javascript"
 							}
@@ -1365,13 +1305,13 @@
 									"pm.test(\"The icon is updated\", function () {",
 									"    var jsonObject = xml2Json(responseBody);",
 									"    pm.expect(jsonObject.ProjectObject.Icon).to.eql(newProjectIcon);",
-									"    pm.environment.set(\"projectIcon\", newProjectIcon);",
+									"    pm.collectionVariables.set(\"projectIcon\", newProjectIcon);",
 									"});",
 									"",
 									"pm.test(\"The name is updated\", function () {",
 									"    var jsonObject = xml2Json(responseBody);",
 									"    pm.expect(jsonObject.ProjectObject.Content).to.eql(newProjectName);",
-									"    pm.environment.set(\"projectName\", newProjectName);",
+									"    pm.collectionVariables.set(\"projectName\", newProjectName);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1417,8 +1357,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const projectName = pm.environment.get('projectName');",
-									"const projectId = parseInt(pm.environment.get('projectId'));",
+									"const projectName = pm.variables.get('projectName');",
+									"const projectId = parseInt(pm.variables.get('projectId'));",
 									"",
 									"pm.test(\"The name of the deleted project is correct\", function () {",
 									"    var jsonData = pm.response.json();",
@@ -1534,7 +1474,7 @@
 									"    pm.expect(user.FullName).to.eql(fullName);",
 									"    pm.expect(user).to.not.have.property(\"Password\");",
 									"    pm.expect(user).to.have.property(\"Id\");",
-									"    pm.environment.set(\"userId\", user.Id);",
+									"    pm.collectionVariables.set(\"userId\", user.Id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1544,15 +1484,16 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
+									"pm.collectionVariables.clear();",
+									"",
+									"pm.collectionVariables.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
+									"pm.collectionVariables.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
+									"pm.collectionVariables.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
+									"",
 									"const cookieJar = pm.cookies.jar();",
 									"cookieJar.clear(pm.variables.get(\"host\"), (err) => {",
 									"    if (err) console.error(err)",
-									"});",
-									"",
-									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
-									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
-									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
-									""
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -1594,7 +1535,7 @@
 									"pm.test(\"Check is there token and then save\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('TokenString');",
-									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.TokenString);",
 									"});",
 									"",
 									"pm.test(\"Check user email\", function () {",
@@ -1654,8 +1595,8 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"projectName\", pm.variables.replaceIn('{{$randomDepartment}}'));",
-									"pm.environment.set(\"projectIcon\", pm.variables.replaceIn('{{$randomInt}}'));"
+									"pm.collectionVariables.set(\"projectName\", pm.variables.replaceIn('{{$randomDepartment}}'));",
+									"pm.collectionVariables.set(\"projectIcon\", pm.variables.replaceIn('{{$randomInt}}'));"
 								],
 								"type": "text/javascript"
 							}
@@ -1666,8 +1607,8 @@
 								"exec": [
 									"var jsonObject = xml2Json(responseBody);",
 									"",
-									"pm.environment.set(\"projectId\", jsonObject.ProjectObject.Id);",
-									"pm.environment.set(\"projectName\", jsonObject.ProjectObject.Content);"
+									"pm.collectionVariables.set(\"projectId\", jsonObject.ProjectObject.Id);",
+									"pm.collectionVariables.set(\"projectName\", jsonObject.ProjectObject.Content);"
 								],
 								"type": "text/javascript"
 							}
@@ -1753,7 +1694,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
+									"pm.collectionVariables.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
 								],
 								"type": "text/javascript"
 							}
@@ -1762,7 +1703,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemName = pm.environment.get(\"itemName\");",
+									"const itemName = pm.variables.get(\"itemName\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -1776,8 +1717,8 @@
 									"pm.test(\"Check there is an id and save it\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('Id');",
-									"    pm.environment.set(\"itemId\", jsonData.Id);",
-									"    pm.environment.set(\"projectId\", jsonData.ProjectId)",
+									"    pm.collectionVariables.set(\"itemId\", jsonData.Id);",
+									"    pm.collectionVariables.set(\"projectId\", jsonData.ProjectId)",
 									"});"
 								],
 								"type": "text/javascript"
@@ -1822,8 +1763,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemName = pm.environment.get(\"itemName\");",
-									"const projectId = parseInt(pm.environment.get(\"projectId\"));",
+									"const itemName = pm.variables.get(\"itemName\");",
+									"const projectId = parseInt(pm.variables.get(\"projectId\"));",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -1874,8 +1815,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemName = pm.environment.get(\"itemName\");",
-									"const projectId = pm.environment.get(\"projectId\");",
+									"const itemName = pm.variables.get(\"itemName\");",
+									"const projectId = pm.variables.get(\"projectId\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -1982,7 +1923,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
+									"pm.collectionVariables.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
 								],
 								"type": "text/javascript"
 							}
@@ -1991,7 +1932,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemName = pm.environment.get(\"itemName\");",
+									"const itemName = pm.variables.get(\"itemName\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -2005,8 +1946,8 @@
 									"pm.test(\"Check there is an id and save it\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('Id');",
-									"    pm.environment.set(\"parentItemId\", jsonData.Id);",
-									"    pm.environment.set(\"projectId\", jsonData.ProjectId)",
+									"    pm.collectionVariables.set(\"parentItemId\", jsonData.Id);",
+									"    pm.collectionVariables.set(\"projectId\", jsonData.ProjectId)",
 									"});"
 								],
 								"type": "text/javascript"
@@ -2051,7 +1992,7 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
-									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
+									"pm.collectionVariables.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));"
 								],
 								"type": "text/javascript"
 							}
@@ -2060,8 +2001,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemName = pm.environment.get(\"itemName\");",
-									"const parentId = pm.environment.get(\"parentItemId\");",
+									"const itemName = pm.variables.get(\"itemName\");",
+									"const parentId = pm.variables.get(\"parentItemId\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -2075,8 +2016,8 @@
 									"pm.test(\"Check there is an id and save it\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('Id');",
-									"    pm.environment.set(\"childItemId\", jsonData.Id);",
-									"    pm.environment.set(\"projectId\", jsonData.ProjectId)",
+									"    pm.collectionVariables.set(\"childItemId\", jsonData.Id);",
+									"    pm.collectionVariables.set(\"projectId\", jsonData.ProjectId)",
 									"});",
 									"",
 									"pm.test(\"Check that parent id is correct\", function () {",
@@ -2299,7 +2240,7 @@
 									"    pm.expect(responseFullName).to.eql(fullName);",
 									"    pm.expect(responsePassword.length).to.eql(0);",
 									"    pm.expect(responseId).not.oneOf([null, undefined]);",
-									"    pm.environment.set(\"userId\", responseId);",
+									"    pm.collectionVariables.set(\"userId\", responseId);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -2309,15 +2250,16 @@
 							"listen": "prerequest",
 							"script": {
 								"exec": [
+									"pm.collectionVariables.clear();",
+									"",
+									"pm.collectionVariables.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
+									"pm.collectionVariables.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
+									"pm.collectionVariables.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
+									"",
 									"const cookieJar = pm.cookies.jar();",
 									"cookieJar.clear(pm.variables.get(\"host\"), (err) => {",
 									"    if (err) console.error(err)",
-									"});",
-									"",
-									"pm.environment.set(\"email\", pm.variables.replaceIn('{{$randomEmail}}'));",
-									"pm.environment.set(\"fullName\", pm.variables.replaceIn('{{$randomFullName}}'));",
-									"pm.environment.set(\"password\", pm.variables.replaceIn('{{$randomPassword}}'));",
-									""
+									"});"
 								],
 								"type": "text/javascript"
 							}
@@ -2350,7 +2292,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const email = pm.environment.get('email');",
+									"const email = pm.variables.get('email');",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
 									"    pm.response.to.have.status(200);",
@@ -2359,7 +2301,7 @@
 									"pm.test(\"Check is there token and then save\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('TokenString');",
-									"    pm.environment.set(\"accessToken\", jsonData.TokenString);",
+									"    pm.collectionVariables.set(\"accessToken\", jsonData.TokenString);",
 									"});",
 									"",
 									"pm.test(\"Check user email\", function () {",
@@ -2434,7 +2376,7 @@
 									"pm.test(\"Select Today filter\", function () {",
 									"    const todayFilter = pm.response.json().find(obj => obj.Content == \"Today\");",
 									"    pm.expect(todayFilter).to.not.be.undefined;",
-									"    pm.environment.set(\"todayFilterId\", todayFilter.Id);",
+									"    pm.collectionVariables.set(\"todayFilterId\", todayFilter.Id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -2513,13 +2455,13 @@
 							"script": {
 								"exec": [
 									"const moment = require(\"moment\");",
-									"const dueDate = moment().subtract(2, \"hours\").add(1, \"minutes\");",
+									"const dueDate = moment().subtract(6, \"hours\");",
 									"const dueDateRequestFormat = dueDate.format(\"MM/DD/YYYY HH:mm\"); // e.g. 01/11/2021 13:02",
 									"const dueDateResponseFormat = dueDate.format(\"DD MMM h:mm A\"); // e.g. 11 Jan 1:02 PM",
 									"",
-									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));",
-									"pm.environment.set(\"dueDateRequestFormat\", dueDateRequestFormat);",
-									"pm.environment.set(\"dueDateResponseFormat\", dueDateResponseFormat);"
+									"pm.collectionVariables.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));",
+									"pm.collectionVariables.set(\"dueDateRequestFormat\", dueDateRequestFormat);",
+									"pm.collectionVariables.set(\"dueDateResponseFormat\", dueDateResponseFormat);"
 								],
 								"type": "text/javascript"
 							}
@@ -2528,7 +2470,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemName = pm.environment.get(\"itemName\");",
+									"const itemName = pm.variables.get(\"itemName\");",
 									"const dueDate = pm.variables.get(\"dueDateResponseFormat\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
@@ -2548,7 +2490,7 @@
 									"pm.test(\"Check there is an id and save it\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('Id');",
-									"    pm.environment.set(\"itemId\", jsonData.Id);",
+									"    pm.collectionVariables.set(\"itemId\", jsonData.Id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -2646,9 +2588,9 @@
 									"const dueDateRequestFormat = dueDate.format(\"MM/DD/YYYY HH:mm\"); // e.g. 01/11/2021 13:02",
 									"const dueDateResponseFormat = dueDate.format(\"DD MMM h:mm A\"); // e.g. 11 Jan 1:02 PM",
 									"",
-									"pm.environment.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));",
-									"pm.environment.set(\"dueDateRequestFormat\", dueDateRequestFormat);",
-									"pm.environment.set(\"dueDateResponseFormat\", dueDateResponseFormat);"
+									"pm.collectionVariables.set(\"itemName\", pm.variables.replaceIn('{{$randomWords}}'));",
+									"pm.collectionVariables.set(\"dueDateRequestFormat\", dueDateRequestFormat);",
+									"pm.collectionVariables.set(\"dueDateResponseFormat\", dueDateResponseFormat);"
 								],
 								"type": "text/javascript"
 							}
@@ -2657,7 +2599,7 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"const itemName = pm.environment.get(\"itemName\");",
+									"const itemName = pm.variables.get(\"itemName\");",
 									"const dueDate = pm.variables.get(\"dueDateResponseFormat\");",
 									"",
 									"pm.test(\"Status code is 200\", function () {",
@@ -2677,7 +2619,7 @@
 									"pm.test(\"Check there is an id and save it\", function () {",
 									"    var jsonData = pm.response.json();",
 									"    pm.expect(jsonData).to.have.property('Id');",
-									"    pm.environment.set(\"itemId\", jsonData.Id);",
+									"    pm.collectionVariables.set(\"itemId\", jsonData.Id);",
 									"});"
 								],
 								"type": "text/javascript"
@@ -2865,6 +2807,48 @@
 					"response": []
 				}
 			]
+		}
+	],
+	"variable": [
+		{
+			"key": "email",
+			"value": ""
+		},
+		{
+			"key": "fullName",
+			"value": ""
+		},
+		{
+			"key": "password",
+			"value": ""
+		},
+		{
+			"key": "userId",
+			"value": ""
+		},
+		{
+			"key": "accessToken",
+			"value": ""
+		},
+		{
+			"key": "todayFilterId",
+			"value": ""
+		},
+		{
+			"key": "dueDateRequestFormat",
+			"value": ""
+		},
+		{
+			"key": "dueDateResponseFormat",
+			"value": ""
+		},
+		{
+			"key": "itemName",
+			"value": ""
+		},
+		{
+			"key": "itemId",
+			"value": ""
 		}
 	]
 }

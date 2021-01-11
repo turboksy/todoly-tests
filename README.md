@@ -62,4 +62,5 @@ docker run \
 1. Inconsistent format.
 API has posibility to chose request and response format, `xml` or `json`. Unfortunally, one or another doesn't work, so tests are using different formats.
 2. Filters API are not functional. ...
-3.
+3. Date has different formats in request and response.
+4. Todoly operates in server timezone. That's why time based filters (Today, Next) malfunction on the edge.
